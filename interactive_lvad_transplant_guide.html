@@ -1,0 +1,366 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your Interactive Guide: LVAD or Heart Transplant</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #1f2937;
+      --muted: #6b7280;
+      --primary: #124A7E;
+      --secondary: #749ABB;
+      --warning: #749ABB;
+      --danger: #124A7E;
+      --card: #f8fafc;
+      --border: #e5e7eb;
+    }
+    [data-theme="high-contrast"] {
+      --bg: #000000;
+      --fg: #ffffff;
+      --muted: #d1d5db;
+      --primary: #749ABB;
+      --secondary: #749ABB;
+      --warning: #749ABB;
+      --danger: #749ABB;
+      --card: #111827;
+      --border: #374151;
+    }
+    [data-theme="high-contrast"] .card { background: #1a1a1a; border-color: #749ABB; }
+    [data-theme="high-contrast"] .compare .card:first-child { background: #1a1a1a; border-color: #749ABB; }
+    [data-theme="high-contrast"] .compare .card:last-child { background: #1a1a1a; border-color: #749ABB; }
+    [data-theme="high-contrast"] .pill { background: #1a1a1a; border-color: #749ABB; color: #749ABB; }
+    [data-theme="high-contrast"] details { background: #1a1a1a; border-color: #749ABB; }
+    [data-theme="high-contrast"] details[open] { background: #2a2a2a; }
+    [data-theme="high-contrast"] .result { background: #1a1a1a; }
+    [data-theme="high-contrast"] .kbd { background: #1a1a1a; border-color: #749ABB; color: #749ABB; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--fg); background: var(--bg); line-height: 1.55;
+    }
+    header {
+      position: sticky; top: 0; z-index: 50; backdrop-filter: saturate(1.2) blur(6px);
+      background: color-mix(in srgb, var(--bg) 80%, transparent);
+      border-bottom: 1px solid var(--border); 
+    }
+    .container { max-width: 1000px; margin: 0 auto; padding: 0 18px; }
+    .nav { display: flex; align-items: center; gap: 12px; padding: 10px 0; flex-wrap: wrap; }
+    .nav a { color: var(--muted); text-decoration: none; padding: 8px 10px; border-radius: 8px; }
+    .nav a:hover, .nav a:focus { background: color-mix(in srgb, var(--secondary) 15%, white); color: var(--primary); outline: none; }
+    .title { display: grid; grid-template-columns: auto 1fr; gap: 14px; padding: 18px 0 8px 0; }
+    h1 { margin: 0; font-size: clamp(1.4rem, 1rem + 2.2vw, 2.2rem); }
+    .tagline { margin: 4px 0 16px 0; color: var(--muted); }
+
+    main { padding: 18px 0 60px 0; }
+    section { padding: 24px 0; scroll-margin-top: 90px; }
+    .grid { display: grid; gap: 18px; }
+    @media (min-width: 800px) { .grid.cols-2 { grid-template-columns: 1fr 1fr; } }
+
+    .card { background: color-mix(in srgb, var(--secondary) 12%, white); border: 1px solid color-mix(in srgb, var(--secondary) 30%, transparent); border-radius: 14px; padding: 16px; }
+    .card h3 { margin-top: 0; color: var(--primary); }
+    .btn { appearance: none; border: 1px solid var(--border); background: var(--bg); color: var(--fg); padding: 10px 14px; border-radius: 10px; cursor: pointer; }
+    .btn.primary { background: var(--primary); color: #fff; border-color: color-mix(in srgb, var(--primary) 70%, black); }
+    .btn.secondary { background: var(--secondary); color: #ffffff; border-color: color-mix(in srgb, var(--secondary) 70%, black); }
+    .btn.inline { padding: 6px 10px; font-size: 0.95rem; }
+    .pill { display: inline-flex; gap: 8px; align-items: center; padding: 6px 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--secondary) 40%, transparent); background: color-mix(in srgb, var(--secondary) 15%, white); color: var(--primary); font-size: 0.9rem; }
+
+    details { border: 1px dashed color-mix(in srgb, var(--secondary) 40%, transparent); border-radius: 10px; padding: 10px 12px; background: color-mix(in srgb, var(--secondary) 10%, white); }
+    details[open] { background: color-mix(in srgb, var(--secondary) 18%, white); border-color: var(--secondary); }
+    details summary { cursor: pointer; font-weight: 600; outline: none; color: var(--primary); }
+
+    .compare {
+      display: grid; gap: 16px; 
+    }
+    @media (min-width: 840px) { .compare { grid-template-columns: 1fr 1fr; } }
+    .compare .card:first-child { background: color-mix(in srgb, var(--primary) 10%, white); border-color: color-mix(in srgb, var(--primary) 30%, transparent); }
+    .compare .card:last-child { background: color-mix(in srgb, var(--secondary) 12%, white); border-color: color-mix(in srgb, var(--secondary) 30%, transparent); }
+
+    .stat { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; }
+    .stat svg { width: 22px; height: 22px; color: var(--primary); }
+
+    .slider-row { display: grid; gap: 8px; }
+    .slider-row label { font-weight: 600; color: var(--primary); }
+    input[type="range"] { width: 100%; accent-color: var(--primary); }
+
+    .result { border-left: 4px solid var(--primary); padding: 12px 14px; background: color-mix(in srgb, var(--primary) 10%, white); border-radius: 10px; }
+
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background: color-mix(in srgb, var(--secondary) 15%, white); border: 1px solid color-mix(in srgb, var(--secondary) 30%, transparent); border-bottom-width: 2px; padding: 1px 6px; border-radius: 6px; color: var(--primary); }
+
+    footer { border-top: 1px solid var(--border); padding: 24px 0 60px 0; color: var(--muted); }
+
+    .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    @media print {
+      header, .toolbar { display: none; }
+      body { background: #fff; }
+      .card { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="title" role="banner">
+        <svg aria-hidden="true" width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 21s-5-3.33-8-7.5C1.5 10.5 3 6 6.5 6 8.55 6 10 7.5 12 9.5 14 7.5 15.45 6 17.5 6 21 6 22.5 10.5 20 13.5 17 17.67 12 21 12 21z" fill="#124A7E"/>
+          <circle cx="12" cy="9.5" r="1.2" fill="#fff"/>
+        </svg>
+        <div>
+          <h1>Your Interactive Guide: LVAD or Heart Transplant</h1>
+          <p class="tagline">Explore differences, common questions, and a values tool to help you talk with your care team. This guide does not replace medical advice.</p>
+        </div>
+      </div>
+      <nav class="nav" aria-label="Primary">
+        <a href="#compare">Compare Options</a>
+        <a href="#questions">Questions and Concerns</a>
+        <a href="#values">Values and Preferences</a>
+        <a href="#checklist">Visit Checklist</a>
+        <a href="#faq">FAQ</a>
+        <a href="#sources">Sources</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="intro">
+      <div class="toolbar" role="region" aria-label="Display controls">
+        <button class="btn inline" id="contrastBtn" aria-pressed="false">High contrast</button>
+        <button class="btn inline" id="fontUp">A+</button>
+        <button class="btn inline" id="fontDown">A−</button>
+        <button class="btn inline" onclick="window.print()">Print or Save as PDF</button>
+      </div>
+    </section>
+
+    <section id="compare">
+      <h2>Compare Options</h2>
+      <div class="compare">
+        <div class="card" aria-labelledby="lvadTitle">
+          <h3 id="lvadTitle">LVAD</h3>
+          <p>An LVAD is a mechanical pump that supports the left ventricle so blood can circulate when the heart is too weak. It can be used as a bridge to transplant or as a long-term therapy.</p>
+          <div class="grid">
+            <div class="stat"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v5l4 2-.75 1.86L11 13V7h2z"/></svg><div>
+              <strong>Timing.</strong> Therapy can be available sooner because it does not depend on a donor organ.
+            </div></div>
+            <div class="stat"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 7L9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59z"/></svg><div>
+              <strong>Impact on life.</strong> Device management is required, including carrying a controller and batteries and caring for the driveline site.
+            </div></div>
+            <div class="stat"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-5-3.33-8-7.5C1.5 10.5 3 6 6.5 6 8.55 6 10 7.5 12 9.5 14 7.5 15.45 6 17.5 6 21 6 22.5 10.5 20 13.5 17 17.67 12 21 12 21z"/></svg><div>
+              <strong>Risks.</strong> Bleeding, infection, and stroke are possible. Early rehospitalization is common.
+            </div></div>
+          </div>
+          <details>
+            <summary>Show practical notes</summary>
+            <ul>
+              <li>Showering is possible with center-specific routines. Swimming is not recommended because components cannot be submerged.</li>
+              <li>Travel is feasible with planning for power, backup equipment, and clinic contacts.</li>
+              <li>Regular clinic visits and anticoagulation monitoring are typical in the first months.</li>
+            </ul>
+          </details>
+        </div>
+
+        <div class="card" aria-labelledby="txTitle">
+          <h3 id="txTitle">Heart Transplant</h3>
+          <p>A transplant removes the failing heart and replaces it with a donor heart. It offers the most device-free lifestyle for eligible patients after recovery and lifelong follow-up.</p>
+          <div class="grid">
+            <div class="stat"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l2.12 6.47H21l-5.44 3.95L16.88 20 12 15.9 7.12 20l1.32-6.58L3 9.47h6.88z"/></svg><div>
+              <strong>Long-term goals.</strong> Many patients return to daily activities with few physical restrictions once recovery is complete.
+            </div></div>
+            <div class="stat"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22C6.48 22 2 17.52 2 12S6.48 2 12 2s10 4.48 10 10-4.48 10-10 10zm1-17h-2v6l5.25 3.15 1-1.65L13 11.2V5z"/></svg><div>
+              <strong>Waiting.</strong> Eligibility and donor availability determine the timing. Some patients wait months.
+            </div></div>
+            <div class="stat"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 015 5v2H7v-2a5 5 0 015-5zm0-7a3 3 0 110 6 3 3 0 010-6z"/></svg><div>
+              <strong>Medicines.</strong> Lifelong immunosuppression is required and raises infection risk. Regular lab tests and biopsies are common in the first year.
+            </div></div>
+          </div>
+          <details>
+            <summary>Show practical notes</summary>
+            <ul>
+              <li>Vaccinations and infection precautions are important because of immunosuppression.</li>
+              <li>Follow-up visits are frequent in the first months and then spread out.</li>
+              <li>A strong caregiver network supports appointments and medications.</li>
+            </ul>
+          </details>
+        </div>
+      </div>
+      <p class="pill" style="margin-top:12px">Reminder: Only your care team can advise which option fits your medical situation.</p>
+    </section>
+
+    <section id="questions">
+      <h2>Questions and Concerns</h2>
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>About LVADs</h3>
+          <details><summary>How will I manage power and equipment?</summary><p>You will carry a controller and batteries and will learn simple routines for charging and swapping power. Your team provides training and a 24 hour contact.</p></details>
+          <details><summary>Can I shower or bathe?</summary><p>Centers provide shower plans that protect components. Soaking or swimming is not recommended because the device has external parts.</p></details>
+          <details><summary>What complications should I know about?</summary><p>Bleeding, infection at the driveline, and stroke are possible. Your team will show you how to reduce risks and when to call.</p></details>
+        </div>
+        <div class="card">
+          <h3>About Transplant</h3>
+          <details><summary>How long could I wait?</summary><p>Waiting time depends on your medical urgency, blood type, size, and local donor availability. Your team will update you on status and options.</p></details>
+          <details><summary>What is rejection and how is it monitored?</summary><p>Your immune system can attack the donor heart. Medicines reduce this risk. Clinics monitor with labs, imaging, and biopsies in the first year.</p></details>
+          <details><summary>What lifestyle changes are needed?</summary><p>Medicines are daily and infection precautions are important. Most patients resume many activities once recovery is complete.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section id="values">
+      <h2>Values and Preferences Tool</h2>
+      <p>Use the sliders to rate how important each statement is to you. The tool highlights which option may align with your preferences. It does not make a medical decision.</p>
+      <div class="card">
+        <div class="grid cols-2">
+          <div>
+            <div class="slider-row">
+              <label for="s1">I prefer therapy that is available soon, even if a second therapy may be needed later.</label>
+              <input id="s1" type="range" min="0" max="5" value="3" />
+            </div>
+            <div class="slider-row">
+              <label for="s2">I am comfortable managing equipment and daily device care.</label>
+              <input id="s2" type="range" min="0" max="5" value="2" />
+            </div>
+            <div class="slider-row">
+              <label for="s3">I prefer a device-free lifestyle after recovery.</label>
+              <input id="s3" type="range" min="0" max="5" value="4" />
+            </div>
+          </div>
+          <div>
+            <div class="slider-row">
+              <label for="s4">I am willing to take lifelong anti-rejection medicines if needed.</label>
+              <input id="s4" type="range" min="0" max="5" value="3" />
+            </div>
+            <div class="slider-row">
+              <label for="s5">I want to minimize early rehospitalizations.</label>
+              <input id="s5" type="range" min="0" max="5" value="3" />
+            </div>
+            <div class="slider-row">
+              <label for="s6">I can wait for the option that may offer fewer lifestyle limits once I recover.</label>
+              <input id="s6" type="range" min="0" max="5" value="3" />
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn primary" id="calc">Update recommendation</button>
+          <button class="btn" id="reset">Reset</button>
+        </div>
+        <div id="result" class="result" style="margin-top:12px" aria-live="polite">
+          Move the sliders and select Update recommendation to see a summary here.
+        </div>
+      </div>
+    </section>
+
+    <section id="checklist">
+      <h2>Visit Checklist</h2>
+      <div class="card">
+        <ul>
+          <li>Ask about eligibility for each therapy and what criteria apply to you.</li>
+          <li>Request a walkthrough of life at home in the first three months after therapy.</li>
+          <li>Discuss risks and how often complications lead to rehospitalization at your center.</li>
+          <li>Review logistics for travel, work, and caregiving support.</li>
+          <li>Clarify costs, insurance coverage, and equipment or medication copays.</li>
+          <li>Confirm your 24 hour contact for urgent questions and device support.</li>
+        </ul>
+        <p class="pill">Tip: Bring a pen. Use <span class="kbd">Ctrl</span> + <span class="kbd">P</span> to print this page and write notes.</p>
+      </div>
+    </section>
+
+    <section id="faq">
+      <h2>Frequently Asked</h2>
+      <div class="grid">
+        <details class="card"><summary>Is either option a cure?</summary><p>Both options are treatments that improve survival and quality of life. They require lifelong follow-up and a partnership with your care team.</p></details>
+        <details class="card"><summary>Can I travel?</summary><p>Travel is possible after both therapies. LVAD travel requires power planning and spare components. Transplant recipients plan around medicine timing and clinic schedules.</p></details>
+        <details class="card"><summary>Who helps me learn the routines?</summary><p>LVAD programs provide structured training and practice before discharge. Transplant programs provide medication teaching and infection prevention guidance.</p></details>
+      </div>
+    </section>
+
+    <section id="sources">
+      <h2>Sources and Further Reading</h2>
+      <div class="card">
+        <ul>
+          <li>American College of Cardiology, summary on LVADs as evolving alternatives to transplant: <a href="https://www.acc.org/latest-in-cardiology/ten-points-to-remember/2015/06/11/15/05/left-ventricular-assist-devices-a-rapidly-evolving-alternative" target="_blank" rel="noopener">ACC Ten Points</a>.</li>
+          <li>Expert perspective on choosing between transplant and LVAD, including survival figures: <a href="https://secce.es/en/advanced-therapies-for-heart-failure-heart-transplantation-vs-lvad-how-to-choose-expert-opinion/" target="_blank" rel="noopener">SEC Cardiac Surgery Society</a>.</li>
+          <li>Recent analysis suggesting similar two year survival for younger patients with HeartMate 3 LVAD vs transplant: <a href="https://www.nyp.org/advances/article/cardiology/new-analysis-shows-lvad-therapy-offers-similar-survival-outcomes-as-heart-transplantation-for-younger-heart-failure-patients" target="_blank" rel="noopener">NewYork-Presbyterian</a>.</li>
+          <li>LVAD patient FAQ and practical management information: <a href="https://www.cardiovascular.abbott/us/en/patients/treatments-therapies/heartmate-lvad-therapy/frequently-asked-questions.html" target="_blank" rel="noopener">Abbott HeartMate 3 FAQ</a>.</li>
+          <li>Caregiver responsibilities and transplant education materials: <a href="https://www.myast.org/uploads/files/general/Caregiver-Toolkit/07_-Caregiver-Heart-Transplant-LVAD.pdf" target="_blank" rel="noopener">American Society of Transplantation Caregiver Toolkit</a>.</li>
+        </ul>
+        <p style="color:var(--muted)">This guide is for education and shared decision making. It does not provide medical advice.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container">
+    <p>© 2025 Patient Decision Guide. Created for education and discussion with your clinical team.</p>
+  </footer>
+
+  <script>
+    // Display controls
+    const root = document.documentElement;
+    const contrastBtn = document.getElementById('contrastBtn');
+    contrastBtn.addEventListener('click', () => {
+      const hc = root.getAttribute('data-theme') === 'high-contrast';
+      root.setAttribute('data-theme', hc ? '' : 'high-contrast');
+      contrastBtn.setAttribute('aria-pressed', String(!hc));
+    });
+    const fontUp = document.getElementById('fontUp');
+    const fontDown = document.getElementById('fontDown');
+    function getFontSize() {
+      const fs = getComputedStyle(document.body).fontSize;
+      return parseFloat(fs);
+    }
+    fontUp.addEventListener('click', () => { document.body.style.fontSize = (getFontSize() + 1) + 'px'; });
+    fontDown.addEventListener('click', () => { document.body.style.fontSize = Math.max(14, getFontSize() - 1) + 'px'; });
+
+    // Values tool logic
+    function value(id){ return parseInt(document.getElementById(id).value, 10); }
+    function calculate(){
+      // Simple rubric: LVAD aligns with immediacy and comfort with devices. Transplant aligns with device free life and willingness for immunosuppression and waiting.
+      const immed = value('s1');
+      const deviceComfort = value('s2');
+      const deviceFree = value('s3');
+      const immuno = value('s4');
+      const fewerRehosp = value('s5');
+      const canWait = value('s6');
+
+      let lvadScore = 0; let txScore = 0;
+      lvadScore += immed * 1.2; // sooner availability
+      lvadScore += deviceComfort * 1.4; // device management comfort
+      lvadScore += (5 - canWait) * 0.8; // prefers not to wait
+      lvadScore += (5 - fewerRehosp) * 0.5; // early rehospitalizations more acceptable
+
+      txScore += deviceFree * 1.4; // prefers device free
+      txScore += immuno * 0.9; // accepts immunosuppression
+      txScore += canWait * 1.0; // can wait for donor
+      txScore += fewerRehosp * 0.6; // prefers fewer early rehospitalizations
+
+      const total = lvadScore + txScore || 1;
+      const lvadPct = Math.round((lvadScore / total) * 100);
+      const txPct = 100 - lvadPct;
+
+      const result = document.getElementById('result');
+      let summary = '';
+      if (Math.abs(lvadPct - txPct) < 10) {
+        summary = 'Your preferences are balanced between both options. Use this as a starting point for a detailed discussion with your team.';
+      } else if (lvadPct > txPct) {
+        summary = 'Your selections lean toward LVAD features, such as sooner availability and comfort managing a device at home.';
+      } else {
+        summary = 'Your selections lean toward transplant features, such as a device free lifestyle after recovery and willingness to take anti rejection medicines.';
+      }
+
+      result.innerHTML = `
+        <p><strong>Preference summary.</strong> ${summary}</p>
+        <p>Scores reflect your slider choices. They are not medical recommendations.</p>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <div class="pill">LVAD alignment: ${lvadPct}%</div>
+          <div class="pill">Transplant alignment: ${txPct}%</div>
+        </div>
+      `;
+    }
+    document.getElementById('calc').addEventListener('click', calculate);
+    document.getElementById('reset').addEventListener('click', () => {
+      ['s1','s2','s3','s4','s5','s6'].forEach(id => document.getElementById(id).value = 3);
+      document.getElementById('result').textContent = 'Move the sliders and select Update recommendation to see a summary here.';
+    });
+  </script>
+</body>
+</html>
